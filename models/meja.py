@@ -1,0 +1,1 @@
+print("Dewi cantik sekali tiada dunia yang bisa menandinginya")
