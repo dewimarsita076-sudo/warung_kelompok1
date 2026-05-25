@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 
+jam_sekarang = datetime.now().strftime("%H:%M")
 
 # Abstract Class
 class StatusMeja(ABC):
@@ -23,7 +25,7 @@ class MejaTerisi(StatusMeja):
         return True
 
     def keterangan(self):
-        return "terisi"
+        return "Terisi"
 
     def bisa_pesan(self):
         return True
@@ -33,22 +35,26 @@ class MejaTerisi(StatusMeja):
 class MejaKosong(StatusMeja):
 
     def keterangan(self):
-        return "kosong"
+        return "Kosong"
 
     def bisa_pesan(self):
         return False
     
-from models.meja import MejaTerisi, MejaKosong
+# from models.meja import MejaTerisi, MejaKosong
+
+print("=== STATUS MEJA WARUNG ===\n")
 
 # meja terisi
-meja1 = MejaTerisi("19:30")
+meja1 = MejaTerisi(jam_sekarang)
 
-print(meja1.keterangan())          # terisi
-print(meja1.bisa_pesan())          # True
-print(meja1.simpan_jam_masuk())   # True
+print("meja 1")
+print("Status        :", meja1.keterangan())
+print("Bisa Pesan    :", meja1.bisa_pesan())
+print("Jam Masuk     :", meja1.simpan_jam_masuk())
 
 # meja kosong
 meja2 = MejaKosong()
 
-print(meja2.keterangan())         # kosong
-print(meja2.bisa_pesan())         # False
+print("Meja 2")
+print("Status        :", meja2.keterangan())
+print("Bisa Pesan    :", meja2.bisa_pesan())
