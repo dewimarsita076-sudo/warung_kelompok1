@@ -1,3 +1,5 @@
+from exceptions.custom_exceptions import MejaTidakDitemukanError,MejaSudahTerisiError
+
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -22,7 +24,7 @@ class MejaTerisi(StatusMeja):
         self.jam_masuk = jam_masuk
 
     def simpan_jam_masuk(self):
-        return True
+        return (f"Jam masuk pelanggan: {self.jam_masuk}")
 
     def keterangan(self):
         return "Terisi"
@@ -51,6 +53,8 @@ print("meja 1")
 print("Status        :", meja1.keterangan())
 print("Bisa Pesan    :", meja1.bisa_pesan())
 print("Jam Masuk     :", meja1.simpan_jam_masuk())
+
+print("\n")
 
 # meja kosong
 meja2 = MejaKosong()
