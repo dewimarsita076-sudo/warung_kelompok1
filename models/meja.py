@@ -1,14 +1,14 @@
-cfrom abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
 
 
 # Abstract Class
 class StatusMeja(ABC):
 
-    @abstractmethod
+    abstractmethod
     def keterangan(self):
         pass
 
-    @abstractmethod
+    abstractmethod
     def bisa_pesan(self):
         pass
 
