@@ -52,4 +52,3 @@ meja2 = MejaKosong()
 
 print(meja2.keterangan())         # kosong
 print(meja2.bisa_pesan())         # False
-
