@@ -1,5 +1,7 @@
-cfrom abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
+from datetime import datetime
 
+jam_sekarang = datetime.now().strftime("%H:%M")
 
 # Abstract Class
 class StatusMeja(ABC):
@@ -7,11 +9,10 @@ class StatusMeja(ABC):
     @abstractmethod
     def keterangan(self):
         pass
-
+    
     @abstractmethod
     def bisa_pesan(self):
         pass
-
 
 # Subclass Meja Terisi
 class MejaTerisi(StatusMeja):
@@ -20,36 +21,40 @@ class MejaTerisi(StatusMeja):
         self.jam_masuk = jam_masuk
 
     def simpan_jam_masuk(self):
-        return True
+        return (f"Jam masuk disimpan: {self.jam_masuk}")
 
     def keterangan(self):
-        return "terisi"
+        return "Terisi"
 
     def bisa_pesan(self):
-        return True
+        return (f"Meja terisi sejak: {self.jam_masuk}")
 
 
 # Subclass Meja Kosong
 class MejaKosong(StatusMeja):
 
     def keterangan(self):
-        return "kosong"
+        return "Kosong"
 
     def bisa_pesan(self):
-        return False
-    
-from models.meja import MejaTerisi, MejaKosong
+        return (f"Meja kosong")
+
+# from models.meja import MejaTerisi, MejaKosong
+
+print("=== STATUS MEJA WARUNG ===\n")
 
 # meja terisi
-meja1 = MejaTerisi("19:30")
+meja1 = MejaTerisi(jam_sekarang)
 
-print(meja1.keterangan())          # terisi
-print(meja1.bisa_pesan())          # True
-print(meja1.simpan_jam_masuk())   # True
+print(f"Meja 1           : {meja1.keterangan()}")          
+print(f"Meja 1 bisa pesan: {meja1.bisa_pesan()}")          
+print(f"Meja 1           : {meja1.simpan_jam_masuk()}")   
+
+print("\n")
 
 # meja kosong
 meja2 = MejaKosong()
 
-print(meja2.keterangan())         # kosong
-print(meja2.bisa_pesan())         # False
+print(f"Meja 2           : {meja2.keterangan()}")         
+print(f"Meja 2 bisa pesan: {meja2.bisa_pesan()}")         
 
