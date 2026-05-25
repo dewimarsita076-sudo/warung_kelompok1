@@ -1,7 +1,7 @@
 """Modul model menu untuk sistem manajemen warung makan."""
 
 from exceptions.custom_exceptions import MenuHabisError
-
+from exceptions.custom_exceptions import MenuTidakDitemukanError
 
 class Menu:
     """Representasi dasar untuk semua item menu warung."""
