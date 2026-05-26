@@ -1,19 +1,5 @@
 from datetime import datetime
-
-# CLASS MENU
-class Menu:
-    """
-    Class untuk menyimpan data menu makanan/minuman
-    """
-
-    def __init__(self, kode, nama, harga, kategori):
-        self.kode = kode
-        self.nama = nama
-        self.harga = harga
-        self.kategori = kategori
-
-    def __str__(self):
-        return f"[{self.kode}] {self.nama} ({self.kategori}) - Rp{self.harga:,}"
+from models.menu import Menu
 
 
 # HELPER CLASS : ITEM PESANAN
@@ -158,7 +144,6 @@ class Pesanan:
 if __name__ == "__main__":
 
     # DATA MENU
-
     menu1 = Menu("M01", "Nasi Goreng", 18000, "Makanan")
     menu2 = Menu("M02", "Mie Ayam", 15000, "Makanan")
     menu3 = Menu("M03", "Ayam Geprek", 20000, "Makanan")
@@ -166,7 +151,6 @@ if __name__ == "__main__":
     menu5 = Menu("D02", "Jus Alpukat", 12000, "Minuman")
 
     # TAMPILKAN MENU
-
     print("=" * 50)
     print("              DAFTAR MENU")
     print("=" * 50)
@@ -179,7 +163,6 @@ if __name__ == "__main__":
     print("=" * 50)
 
     # MEMBUAT PESANAN
-
     pesanan1 = Pesanan("A01")
 
     # Tambah item
@@ -194,12 +177,9 @@ if __name__ == "__main__":
     pesanan1.hapus_item("D02")
 
     # TAMPILKAN STRUK
-
     print("\n")
     print(pesanan1)
 
     # SELESAIKAN TRANSAKSI
-
     pesanan1.selesai()
-
     print(f"Status Meja Sekarang : {pesanan1.status}")
