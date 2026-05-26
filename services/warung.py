@@ -9,7 +9,6 @@ from models.pesanan import (
 class MenuTidakDitemukanError(Exception):
     pass
 
-
 class MejaSudahTerisiError(Exception):
     pass
 
