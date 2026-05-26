@@ -25,10 +25,7 @@ class Warung:
         # List pesanan selesai
         self._riwayat = []
 
-    # =========================
     # MENU
-    # =========================
-
     def tambah_menu(self, menu):
         """
         Menambahkan menu ke daftar menu
@@ -60,10 +57,7 @@ class Warung:
         for i, menu in enumerate(self._daftar_menu, start=1):
             print(f"{i}. {menu}")
 
-    # =========================
     # PESANAN
-    # =========================
-
     def buka_meja(self, nomor):
         """
         Membuka meja baru
@@ -134,10 +128,7 @@ class Warung:
         print(f"Kembalian  : Rp {kembalian}")
         print("Pembayaran berhasil!")
 
-    # =========================
     # RIWAYAT
-    # =========================
-
     def tampilkan_riwayat(self):
         """
         Menampilkan semua riwayat pesanan
