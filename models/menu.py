@@ -11,19 +11,25 @@ class Menu:
 
 
     @property
-    def harga(self) -> float: return self._harga
+    def harga(self) -> float: 
+        return self._harga
+    
     @harga.setter
-    def harga(self, v: float) -> None:
-        if v < 0: raise ValueError('Harga tidak boleh negatif.')
-        self._harga = v
+    def harga(self, value: float) -> None:
+        if value < 0: 
+            raise ValueError('Harga tidak boleh negatif.')
+        self._harga = value
 
 
     @property
-    def stok(self) -> int: return self._stok
+    def stok(self) -> int: 
+        return self._stok
+    
     @stok.setter
-    def stok(self, v: int) -> None:
-        if v < 0: raise ValueError('Stok tidak boleh negatif.')
-        self._stok = v
+    def stok(self, value: int) -> None:
+        if value < 0: 
+            raise ValueError('Stok tidak boleh negatif.')
+        self._stok = value
 
 
     def kurangi_stok(self, jumlah: int) -> None:
@@ -36,3 +42,39 @@ class Menu:
     def __str__(self) -> str:
         return f'{self.nama} | Rp{self.harga:,.0f} | Stok: {self.stok}'
 
+class MenuMakanan(Menu):
+    """Menu makanan."""
+
+    def __init__(
+        self,
+        nama: str,
+        harga: float,
+        stok: int,
+        porsi: str
+    ) -> None:
+        super().__init__(nama, harga, stok)
+        self.porsi = porsi
+
+    def __str__(self) -> str:
+        return (
+            f"{super().__str__()} | Porsi: {self.porsi}"
+        )
+
+
+class MenuMinuman(Menu):
+    """Menu minuman."""
+
+    def __init__(
+        self,
+        nama: str,
+        harga: float,
+        stok: int,
+        suhu: str
+    ) -> None:
+        super().__init__(nama, harga, stok)
+        self.suhu = suhu
+
+    def __str__(self) -> str:
+        return (
+            f"{super().__str__()} | Suhu: {self.suhu}"
+        )
