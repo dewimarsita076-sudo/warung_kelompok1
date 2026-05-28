@@ -1,80 +1,65 @@
-from exceptions.custom_exceptions import MenuHabisError
+from exceptions.custom_exceptions import MejaTidakDitemukanError
+from exceptions.custom_exceptions import MejaSudahTerisiError
 
-class Menu:
-    """Representasi satu item menu warung."""
-    def __init__(self, nama: str, harga: float, stok: int) -> None:
-        self.nama   = nama
-        self._harga = 0.0
-        self._stok  = 0
-        self.harga  = harga
-        self.stok   = stok
+from abc import ABC, abstractmethod
+from datetime import datetime
+
+jam_sekarang = datetime.now().strftime("%H:%M")
+
+# Abstract Class
+class StatusMeja(ABC):
+
+    abstractmethod
+    def keterangan(self):
+        pass
+
+    abstractmethod
+    def bisa_pesan(self):
+        pass
 
 
-    @property
-    def harga(self) -> float: 
-        return self._harga
+# Subclass Meja Terisi
+class MejaTerisi(StatusMeja):
+
+    def __init__(self, jam_masuk):
+        self.jam_masuk = jam_masuk
+
+    def simpan_jam_masuk(self):
+        return (f"Jam masuk pelanggan: {self.jam_masuk}")
+
+    def keterangan(self):
+        return "Terisi"
+
+    def bisa_pesan(self):
+        return True
+
+
+# Subclass Meja Kosong
+class MejaKosong(StatusMeja):
+
+    def keterangan(self):
+        return "Kosong"
+
+    def bisa_pesan(self):
+        return False
     
-    @harga.setter
-    def harga(self, value: float) -> None:
-        if value < 0: 
-            raise ValueError('Harga tidak boleh negatif.')
-        self._harga = value
+# from models.meja import MejaTerisi, MejaKosong
 
+print("=== STATUS MEJA WARUNG ===\n")
 
-    @property
-    def stok(self) -> int: 
-        return self._stok
-    
-    @stok.setter
-    def stok(self, value: int) -> None:
-        if value < 0: 
-            raise ValueError('Stok tidak boleh negatif.')
-        self._stok = value
+# meja terisi
+meja1 = MejaTerisi(jam_sekarang)
 
+print("meja 1")
+print("Status        :", meja1.keterangan())
+print("Bisa Pesan    :", meja1.bisa_pesan())
+print("Jam Masuk     :", meja1.simpan_jam_masuk())
 
-    def kurangi_stok(self, jumlah: int) -> None:
-        """Raise MenuHabisError jika stok tidak mencukupi."""
-        if jumlah > self._stok:
-            raise MenuHabisError(f'{self.nama} hanya tersisa {self._stok} porsi.')
-        self._stok -= jumlah
+print("\n")
 
+# meja kosong
+meja2 = MejaKosong()
 
-    def __str__(self) -> str:
-        return f'{self.nama} | Rp{self.harga:,.0f} | Stok: {self.stok}'
-
-class MenuMakanan(Menu):
-    """Menu makanan."""
-
-    def __init__(
-        self,
-        nama: str,
-        harga: float,
-        stok: int,
-        porsi: str
-    ) -> None:
-        super().__init__(nama, harga, stok)
-        self.porsi = porsi
-
-    def __str__(self) -> str:
-        return (
-            f"{super().__str__()} | Porsi: {self.porsi}"
-        )
-
-
-class MenuMinuman(Menu):
-    """Menu minuman."""
-
-    def __init__(
-        self,
-        nama: str,
-        harga: float,
-        stok: int,
-        suhu: str
-    ) -> None:
-        super().__init__(nama, harga, stok)
-        self.suhu = suhu
-
-    def __str__(self) -> str:
-        return (
-            f"{super().__str__()} | Suhu: {self.suhu}"
-        )
+print("Meja 2")
+print("Status        :", meja2.keterangan())
+print("Bisa Pesan    :", meja2.bisa_pesan())
