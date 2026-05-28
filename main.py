@@ -25,7 +25,7 @@ def menu_utama(warung: Warung):
                     "Makanan/Minuman (m/n): "
                 )
 
-                nama = input("Nama: ")
+                nama = input("Nama Menu: ")
                 harga = float(input("Harga: "))
                 stok = int(input("Stok: "))
 
