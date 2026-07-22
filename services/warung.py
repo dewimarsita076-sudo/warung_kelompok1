@@ -1,8 +1,9 @@
 from models.menu import Menu
 from models.pesanan import Pesanan
 from exceptions.custom_exceptions import (
+    MejaSudahTerisiError,
+    MejaTidakDitemukanError,
     MenuTidakDitemukanError,
-    MejaSudahTerisiError
 )
 
 
@@ -73,28 +74,43 @@ class Warung:
 
         print(f"Meja {nomor} berhasil dibuka.")
 
-    def pesan(self, nomor_meja, nama_menu, jumlah):
+    def pesan(
+        self,
+        nomor_meja: str,
+        nama_menu: str,
+        jumlah: int,
+    ) -> None:
         """
-        Menambahkan pesanan ke meja
+        Menambahkan menu ke pesanan pada meja aktif.
         """
+        nomor_meja = str(nomor_meja)
 
         if nomor_meja not in self._pesanan_aktif:
-            print(f"Meja {nomor_meja} belum dibuka!")
-            return
+            raise MejaTidakDitemukanError(
+                f"Meja {nomor_meja} belum dibuka."
+            )
 
-        # Cari menu
+        if jumlah <= 0:
+            raise ValueError(
+                "Jumlah pesanan harus lebih dari nol."
+            )
+
         menu = self.cari_menu(nama_menu)
 
-        # Kurangi stok
+        # Mengurangi stok sekaligus memeriksa
+        # apakah stok mencukupi.
         menu.kurangi_stok(jumlah)
 
-        # Tambahkan ke pesanan
         pesanan = self._pesanan_aktif[nomor_meja]
-        pesanan.tambah_item(menu, jumlah)
+
+        pesanan.tambah_item(
+            menu,
+            jumlah,
+        )
 
         print(
-            f"{jumlah}x {menu.nama} berhasil ditambahkan "
-            f"ke meja {nomor_meja}"
+            f"{jumlah} x {menu.nama} berhasil "
+            f"ditambahkan ke meja {nomor_meja}."
         )
 
     def bayar(self, nomor_meja, uang):
