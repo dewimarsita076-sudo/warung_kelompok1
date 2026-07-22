@@ -16,7 +16,7 @@ from exceptions.custom_exceptions import (
     MenuTidakDitemukanError,
 )
 from models.meja import MejaKosong, MejaTerisi
-from models.menu import Menu, MenuMakanan, MenuMinuman
+from models.menu import MenuMakanan, MenuMinuman
 from models.pesanan import ItemPesanan
 from services.warung import Warung
 
