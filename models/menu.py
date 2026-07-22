@@ -1,65 +1,123 @@
-from exceptions.custom_exceptions import MejaTidakDitemukanError
-from exceptions.custom_exceptions import MejaSudahTerisiError
+"""Modul model menu untuk sistem manajemen warung makan."""
 
-from abc import ABC, abstractmethod
-from datetime import datetime
+from exceptions.custom_exceptions import MenuHabisError
+from exceptions.custom_exceptions import MenuTidakDitemukanError
 
-jam_sekarang = datetime.now().strftime("%H:%M")
+class Menu:
+    """Representasi dasar untuk semua item menu warung."""
 
-# Abstract Class
-class StatusMeja(ABC):
+    def __init__(self, nama: str, harga: float, stok: int) -> None:
+        """
+        Membuat objek menu dengan nama, harga, dan stok.
 
-    abstractmethod
-    def keterangan(self):
-        pass
+        Args:
+            nama: Nama menu.
+            harga: Harga satuan menu.
+            stok: Jumlah stok menu.
+        """
+        self.nama = nama
+        self._harga = 0.0
+        self._stok = 0
+        self.harga = harga
+        self.stok = stok
 
-    abstractmethod
-    def bisa_pesan(self):
-        pass
+    @property
+    def harga(self) -> float:
+        """Mengambil nilai harga menu."""
+        return self._harga
+
+    @harga.setter
+    def harga(self, nilai: float) -> None:
+        """
+        Mengatur harga menu.
+
+        Raises:
+            ValueError: Jika harga bernilai negatif.
+        """
+        if nilai < 0:
+            raise ValueError("Harga tidak boleh negatif.")
+        self._harga = nilai
+
+    @property
+    def stok(self) -> int:
+        """Mengambil jumlah stok menu."""
+        return self._stok
+
+    @stok.setter
+    def stok(self, nilai: int) -> None:
+        """
+        Mengatur stok menu.
+
+        Raises:
+            ValueError: Jika stok bernilai negatif.
+        """
+        if nilai < 0:
+            raise ValueError("Stok tidak boleh negatif.")
+        self._stok = nilai
+
+    def kurangi_stok(self, jumlah: int) -> None:
+        """
+        Mengurangi stok menu sesuai jumlah pesanan.
+
+        Args:
+            jumlah: Jumlah menu yang dipesan.
+
+        Raises:
+            ValueError: Jika jumlah pesanan <= 0.
+            MenuHabisError: Jika stok tidak mencukupi.
+        """
+        if jumlah <= 0:
+            raise ValueError("Jumlah pesanan harus lebih dari 0.")
+
+        if jumlah > self._stok:
+            raise MenuHabisError(
+                f"Stok {self.nama} tidak mencukupi. Sisa stok: {self._stok}."
+            )
+
+        self._stok -= jumlah
+
+    def __str__(self) -> str:
+        """Mengembalikan informasi menu dalam bentuk teks."""
+        return f"{self.nama} | Rp{self.harga:,.0f} | Stok: {self.stok}"
 
 
-# Subclass Meja Terisi
-class MejaTerisi(StatusMeja):
+class MenuMakanan(Menu):
+    """Representasi menu makanan dengan tambahan informasi porsi."""
 
-    def __init__(self, jam_masuk):
-        self.jam_masuk = jam_masuk
+    def __init__(self, nama: str, harga: float, stok: int, porsi: str) -> None:
+        """
+        Membuat objek menu makanan.
 
-    def simpan_jam_masuk(self):
-        return (f"Jam masuk pelanggan: {self.jam_masuk}")
+        Args:
+            nama: Nama makanan.
+            harga: Harga makanan.
+            stok: Jumlah stok makanan.
+            porsi: Ukuran atau deskripsi porsi makanan.
+        """
+        super().__init__(nama, harga, stok)
+        self.porsi = porsi
 
-    def keterangan(self):
-        return "Terisi"
-
-    def bisa_pesan(self):
-        return True
+    def __str__(self) -> str:
+        """Mengembalikan informasi menu makanan dalam bentuk teks."""
+        return f"{super().__str__()} | Porsi: {self.porsi}"
 
 
-# Subclass Meja Kosong
-class MejaKosong(StatusMeja):
+class MenuMinuman(Menu):
+    """Representasi menu minuman dengan tambahan informasi suhu."""
 
-    def keterangan(self):
-        return "Kosong"
+    def __init__(self, nama: str, harga: float, stok: int, suhu: str) -> None:
+        """
+        Membuat objek menu minuman.
 
-    def bisa_pesan(self):
-        return False
-    
-# from models.meja import MejaTerisi, MejaKosong
+        Args:
+            nama: Nama minuman.
+            harga: Harga minuman.
+            stok: Jumlah stok minuman.
+            suhu: Jenis suhu minuman, misalnya Panas, Dingin, atau Es.
+        """
+        super().__init__(nama, harga, stok)
+        self.suhu = suhu
 
-print("=== STATUS MEJA WARUNG ===\n")
-
-# meja terisi
-meja1 = MejaTerisi(jam_sekarang)
-
-print("meja 1")
-print("Status        :", meja1.keterangan())
-print("Bisa Pesan    :", meja1.bisa_pesan())
-print("Jam Masuk     :", meja1.simpan_jam_masuk())
-
-print("\n")
-
-# meja kosong
-meja2 = MejaKosong()
-
-print("Meja 2")
-print("Status        :", meja2.keterangan())
-print("Bisa Pesan    :", meja2.bisa_pesan())
+    def __str__(self) -> str:
+        """Mengembalikan informasi menu minuman dalam bentuk teks."""
+        return f"{super().__str__()} | Suhu: {self.suhu}"
