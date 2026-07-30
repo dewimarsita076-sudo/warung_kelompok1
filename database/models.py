@@ -21,7 +21,6 @@ class MenuDB(Base):
     """
     Model database untuk tabel menu.
     """
-
     __tablename__ = "menu"
 
     id: Mapped[int] = mapped_column(
@@ -49,6 +48,16 @@ class MenuDB(Base):
     kategori: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
+    )
+    
+    porsi: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+    suhu: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
     )
 
     # Relasi satu menu dapat memiliki banyak transaksi.

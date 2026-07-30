@@ -1,10 +1,11 @@
-from models.menu import Menu
+from models.menu import Menu, MenuMakanan, MenuMinuman
 from models.pesanan import Pesanan
 from exceptions.custom_exceptions import (
     MejaSudahTerisiError,
     MejaTidakDitemukanError,
     MenuTidakDitemukanError,
 )
+from database import db_handler
 
 
 class Warung:
@@ -26,11 +27,50 @@ class Warung:
         # List pesanan selesai
         self._riwayat = []
 
+        # Pastikan tabel SQLite sudah ada, lalu muat menu lama.
+        db_handler.init_db()
+        self._muat_menu_dari_db()
+
     # MENU
+    def _muat_menu_dari_db(self):
+        """
+        Memuat seluruh menu yang tersimpan di SQLite ke memori
+        saat aplikasi pertama kali dijalankan.
+        """
+        for menu_db in db_handler.ambil_semua_menu():
+            if menu_db.kategori == "Makanan":
+                menu_obj = MenuMakanan(
+                    menu_db.nama,
+                    menu_db.harga,
+                    menu_db.stok,
+                    menu_db.porsi or "",
+                )
+            else:
+                menu_obj = MenuMinuman(
+                    menu_db.nama,
+                    menu_db.harga,
+                    menu_db.stok,
+                    menu_db.suhu or "",
+                )
+
+            self._daftar_menu.append(menu_obj)
+
     def tambah_menu(self, menu):
         """
-        Menambahkan menu ke daftar menu
+        Menambahkan menu ke daftar menu, sekaligus menyimpannya
+        secara permanen ke database SQLite.
         """
+        kategori = (
+            "Makanan" if isinstance(menu, MenuMakanan) else "Minuman"
+        )
+
+        db_handler.simpan_menu(
+            nama=menu.nama,
+            harga=menu.harga,
+            stok=menu.stok,
+            kategori=kategori,
+        )
+
         self._daftar_menu.append(menu)
 
     def cari_menu(self, nama):

@@ -103,22 +103,26 @@ if __name__ == "__main__":
 
     warung = Warung()
 
-    warung.tambah_menu(
-        MenuMakanan(
-            "Nasi Rames",
-            15000,
-            20,
-            "Normal"
+    # Seed menu awal hanya jika database masih kosong,
+    # supaya tidak bentrok dengan constraint unique nama menu
+    # setiap kali program dijalankan ulang.
+    if not warung._daftar_menu:
+        warung.tambah_menu(
+            MenuMakanan(
+                "Nasi Rames",
+                15000,
+                20,
+                "Normal"
+            )
         )
-    )
 
-    warung.tambah_menu(
-        MenuMinuman(
-            "Es Teh",
-            5000,
-            30,
-            "Dingin"
+        warung.tambah_menu(
+            MenuMinuman(
+                "Es Teh",
+                5000,
+                30,
+                "Dingin"
+            )
         )
-    )
 
     menu_utama(warung)
