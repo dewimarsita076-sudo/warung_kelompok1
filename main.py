@@ -1,4 +1,5 @@
 from services.warung import Warung
+from services import api_client
 from models.menu import (
     MenuMakanan,
     MenuMinuman
@@ -15,6 +16,7 @@ def menu_utama(warung: Warung):
         print("4. Pesan")
         print("5. Bayar")
         print("6. Riwayat")
+        print("7. Konversi Mata Uang")
         print("0. Keluar")
 
         try:
@@ -88,6 +90,38 @@ def menu_utama(warung: Warung):
 
             elif pilih == "6":
                 warung.tampilkan_riwayat()
+
+            elif pilih == "7":
+                kode = input(
+                    "Kode mata uang tujuan (mis. USD, JPY, EUR): "
+                )
+
+                try:
+                    kurs = api_client.get_kurs(kode)
+                    kode_tampil = kode.strip().upper()
+
+                    print(
+                        f"\n===== KONVERSI MATA UANG "
+                        f"({kode_tampil}) ====="
+                    )
+                    print(f"Kurs 1 IDR = {kurs:.6f} {kode_tampil}\n")
+
+                    if not warung._daftar_menu:
+                        print("Belum ada menu.")
+                    else:
+                        for menu in warung._daftar_menu:
+                            hasil = menu.harga * kurs
+                            print(
+                                f"{menu.nama:<15} : "
+                                f"Rp {menu.harga:,.0f}"
+                                f"  =  {hasil:,.2f} {kode_tampil}"
+                            )
+
+                except ValueError as error:
+                    print(f"Mata uang tidak valid: {error}")
+
+                except ConnectionError as error:
+                    print(f"Gagal mengambil kurs: {error}")
 
             elif pilih == "0":
                 break

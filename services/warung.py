@@ -183,6 +183,7 @@ class Warung:
         print(f"Bayar      : Rp {uang}")
         print(f"Kembalian  : Rp {kembalian}")
         print("Pembayaran berhasil!")
+        return kembalian
 
     # RIWAYAT
     def tampilkan_riwayat(self):
