@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import Generator
 
 import pytest
 
@@ -19,6 +20,8 @@ from models.meja import MejaKosong, MejaTerisi
 from models.menu import Menu, MenuMakanan, MenuMinuman
 from models.pesanan import ItemPesanan
 from services.warung import Warung
+from database.db_handler import SessionLocal
+from database.models import MenuDB
 
 
 @pytest.fixture
@@ -34,12 +37,30 @@ def menu_minuman() -> MenuMinuman:
 
 
 @pytest.fixture
-def warung_dengan_menu() -> Warung:
+def warung_dengan_menu() -> Generator[Warung, None, None]:
     """Menyediakan objek warung yang sudah memiliki beberapa menu."""
+
+    # Bersihkan dulu kalau ada sisa data dari run sebelumnya yang gagal,
+    # supaya insert di bawah ini tidak bentrok UNIQUE constraint.
+    with SessionLocal() as session:
+        session.query(MenuDB).filter(
+            MenuDB.nama.in_(["Nasi Rames", "Es Teh"])
+        ).delete(synchronize_session=False)
+        session.commit()
+
     warung = Warung()
     warung.tambah_menu(MenuMakanan("Nasi Rames", 15000, 10, "Porsi normal"))
     warung.tambah_menu(MenuMinuman("Es Teh", 5000, 20, "Dingin"))
-    return warung
+
+    yield warung
+
+    # Bersihkan lagi setelah test selesai (baik lulus maupun gagal),
+    # supaya run berikutnya juga mulai dari kondisi bersih.
+    with SessionLocal() as session:
+        session.query(MenuDB).filter(
+            MenuDB.nama.in_(["Nasi Rames", "Es Teh"])
+        ).delete(synchronize_session=False)
+        session.commit()
 
 
 def test_harga_negatif_raise_error() -> None:
