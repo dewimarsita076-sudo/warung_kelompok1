@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from models.menu import Menu, MenuMakanan, MenuMinuman
 from models.pesanan import Pesanan
 from exceptions.custom_exceptions import (
@@ -27,9 +29,11 @@ class Warung:
         # List pesanan selesai
         self._riwayat = []
 
-        # Pastikan tabel SQLite sudah ada, lalu muat menu lama.
+        # Pastikan tabel SQLite sudah ada, lalu muat menu
+        # dan riwayat transaksi lama.
         db_handler.init_db()
         self._muat_menu_dari_db()
+        self._muat_riwayat_dari_db()
 
     # MENU
     def _muat_menu_dari_db(self):
@@ -54,6 +58,53 @@ class Warung:
                 )
 
             self._daftar_menu.append(menu_obj)
+
+    def _muat_riwayat_dari_db(self):
+        """
+        Memuat seluruh riwayat transaksi yang tersimpan di SQLite
+        ke memori (self._riwayat) saat aplikasi pertama kali
+        dijalankan, supaya laporan tidak hilang setelah program
+        ditutup dan dibuka kembali.
+        """
+        transaksi_per_pesanan = {}
+
+        for transaksi in db_handler.ambil_semua_transaksi():
+            kunci = (transaksi.nomor_meja, transaksi.waktu)
+
+            if kunci not in transaksi_per_pesanan:
+                transaksi_per_pesanan[kunci] = Pesanan(
+                    transaksi.nomor_meja
+                )
+
+            menu_db = db_handler.ambil_menu_by_id(
+                transaksi.menu_id
+            )
+
+            if menu_db is None:
+                continue
+
+            menu = self._cari_menu_aman(menu_db.nama)
+
+            if menu is None:
+                continue
+
+            transaksi_per_pesanan[kunci].tambah_item(
+                menu,
+                transaksi.jumlah,
+            )
+
+        self._riwayat.extend(transaksi_per_pesanan.values())
+
+    def _cari_menu_aman(self, nama):
+        """
+        Sama seperti cari_menu, tetapi mengembalikan None
+        jika menu tidak ditemukan (tidak melempar exception).
+        """
+        for menu in self._daftar_menu:
+            if menu.nama.lower() == nama.lower():
+                return menu
+
+        return None
 
     def tambah_menu(self, menu):
         """
@@ -171,6 +222,25 @@ class Warung:
             return
 
         kembalian = uang - total
+
+        # Simpan setiap item pesanan sebagai transaksi permanen
+        # ke SQLite, supaya laporan tidak hilang saat program
+        # ditutup.
+        waktu = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        for item in pesanan._items:
+            menu_id = db_handler.ambil_menu_id_by_nama(
+                item.menu.nama
+            )
+
+            if menu_id is not None:
+                db_handler.simpan_transaksi(
+                    menu_id=menu_id,
+                    nomor_meja=nomor_meja,
+                    jumlah=item.jumlah,
+                    subtotal=item.subtotal(),
+                    waktu=waktu,
+                )
 
         # Pindahkan ke riwayat
         self._riwayat.append(pesanan)

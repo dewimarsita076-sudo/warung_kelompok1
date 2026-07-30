@@ -101,6 +101,34 @@ def update_stok_menu(
         menu.stok = stok_baru
         session.commit()
 
+def ambil_menu_id_by_nama(nama: str) -> int | None:
+    """
+    Mencari id menu di database berdasarkan nama.
+
+    Args:
+        nama: Nama menu yang dicari.
+
+    Returns:
+        id menu jika ditemukan, None jika tidak ada.
+    """
+    with SessionLocal() as session:
+        statement = select(MenuDB.id).where(MenuDB.nama == nama)
+        return session.scalar(statement)
+
+
+def ambil_menu_by_id(menu_id: int) -> MenuDB | None:
+    """
+    Mengambil satu baris menu dari database berdasarkan id.
+
+    Args:
+        menu_id: id menu yang dicari.
+
+    Returns:
+        Objek MenuDB jika ditemukan, None jika tidak ada.
+    """
+    with SessionLocal() as session:
+        return session.get(MenuDB, menu_id)
+        
 
 def simpan_transaksi(
     menu_id: int,
