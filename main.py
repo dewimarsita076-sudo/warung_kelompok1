@@ -1,5 +1,6 @@
 from services.warung import Warung
 from services import api_client
+from services import laporan
 from models.menu import (
     MenuMakanan,
     MenuMinuman
@@ -17,6 +18,7 @@ def menu_utama(warung: Warung):
         print("5. Bayar")
         print("6. Riwayat")
         print("7. Konversi Mata Uang")
+        print("8. Laporan")
         print("0. Keluar")
 
         try:
@@ -122,6 +124,78 @@ def menu_utama(warung: Warung):
 
                 except ConnectionError as error:
                     print(f"Gagal mengambil kurs: {error}")
+
+            elif pilih == "8":
+                print("\n----- MENU LAPORAN -----")
+                print("1. Menu Tersedia (urut harga termurah)")
+                print("2. Pendapatan per Kategori")
+                print("3. Riwayat Diurutkan (total tertinggi)")
+                print("4. Ringkasan Transaksi")
+                sub = input("Pilih laporan: ")
+
+                if sub == "1":
+                    hasil = laporan.menu_tersedia(
+                        warung._daftar_menu
+                    )
+
+                    print("\n===== MENU TERSEDIA =====")
+
+                    if not hasil:
+                        print("Tidak ada menu dengan stok tersedia.")
+                    else:
+                        for menu in hasil:
+                            print(
+                                f"{menu.nama:<15} : "
+                                f"Rp {menu.harga:,.0f}  "
+                                f"(stok: {menu.stok})"
+                            )
+
+                elif sub == "2":
+                    hasil = laporan.pendapatan_per_kategori(
+                        warung._riwayat
+                    )
+
+                    print("\n===== PENDAPATAN PER KATEGORI =====")
+                    print(
+                        f"Makanan : Rp "
+                        f"{hasil['MenuMakanan']:,.0f}"
+                    )
+                    print(
+                        f"Minuman : Rp "
+                        f"{hasil['MenuMinuman']:,.0f}"
+                    )
+
+                elif sub == "3":
+                    hasil = laporan.riwayat_diurutkan_total(
+                        warung._riwayat
+                    )
+
+                    print(
+                        "\n===== RIWAYAT (Total Tertinggi -> "
+                        "Terendah) ====="
+                    )
+
+                    if not hasil:
+                        print("Belum ada riwayat.")
+                    else:
+                        for pesanan in hasil:
+                            print(pesanan)
+
+                elif sub == "4":
+                    hasil = laporan.ringkasan_transaksi(
+                        warung._riwayat
+                    )
+
+                    print("\n===== RINGKASAN TRANSAKSI =====")
+
+                    if not hasil:
+                        print("Belum ada transaksi.")
+                    else:
+                        for baris in hasil:
+                            print(baris)
+
+                else:
+                    print("Pilihan laporan tidak valid.")
 
             elif pilih == "0":
                 break
