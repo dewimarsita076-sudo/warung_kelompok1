@@ -1,118 +1,152 @@
-from models.menu import Menu, MenuMakanan, MenuMinuman
-from models.pesanan import Pesanan
+"""Service utama Sistem Manajemen Warung Makan."""
+
+from __future__ import annotations
+
+from typing import Any
+
 from exceptions.custom_exceptions import (
     MejaSudahTerisiError,
     MejaTidakDitemukanError,
     MenuTidakDitemukanError,
 )
-from database import db_handler
+from models.pesanan import Pesanan
 
 
 class Warung:
     """
-    Controller utama aplikasi warung makan.
-    Mengelola:
-    - daftar menu
-    - pesanan aktif
-    - riwayat pesanan
+    Mengelola menu, meja, pesanan, pembayaran,
+    dan riwayat transaksi di dalam memori.
+
+    Penyimpanan ke database dilakukan melalui main.py,
+    bukan langsung dari class Warung.
     """
 
-    def __init__(self):
-        # List semua menu
-        self._daftar_menu = []
+    def __init__(self) -> None:
+        """Membuat objek Warung dengan data awal kosong."""
+        self._daftar_menu: list[Any] = []
+        self._pesanan_aktif: dict[str, Pesanan] = {}
+        self._riwayat: list[Pesanan] = []
 
-        # Dict nomor_meja -> pesanan aktif
-        self._pesanan_aktif = {}
+    # =====================================================
+    # PENGELOLAAN MENU
+    # =====================================================
 
-        # List pesanan selesai
-        self._riwayat = []
-
-        # Pastikan tabel SQLite sudah ada, lalu muat menu lama.
-        db_handler.init_db()
-        self._muat_menu_dari_db()
-
-    # MENU
-    def _muat_menu_dari_db(self):
+    def tambah_menu(self, menu: Any) -> None:
         """
-        Memuat seluruh menu yang tersimpan di SQLite ke memori
-        saat aplikasi pertama kali dijalankan.
-        """
-        for menu_db in db_handler.ambil_semua_menu():
-            if menu_db.kategori == "Makanan":
-                menu_obj = MenuMakanan(
-                    menu_db.nama,
-                    menu_db.harga,
-                    menu_db.stok,
-                    menu_db.porsi or "",
-                )
-            else:
-                menu_obj = MenuMinuman(
-                    menu_db.nama,
-                    menu_db.harga,
-                    menu_db.stok,
-                    menu_db.suhu or "",
-                )
+        Menambahkan objek menu ke daftar menu di memori.
 
-            self._daftar_menu.append(menu_obj)
+        Method ini tidak menyimpan menu ke database.
+        Penyimpanan database dilakukan melalui main.py.
+        """
+        nama_menu = str(menu.nama).strip()
 
-    def tambah_menu(self, menu):
-        """
-        Menambahkan menu ke daftar menu, sekaligus menyimpannya
-        secara permanen ke database SQLite.
-        """
-        kategori = (
-            "Makanan" if isinstance(menu, MenuMakanan) else "Minuman"
+        if not nama_menu:
+            raise ValueError(
+                "Nama menu tidak boleh kosong."
+            )
+
+        menu_sama = any(
+            str(menu_lama.nama).strip().lower()
+            == nama_menu.lower()
+            for menu_lama in self._daftar_menu
         )
 
-        db_handler.simpan_menu(
-            nama=menu.nama,
-            harga=menu.harga,
-            stok=menu.stok,
-            kategori=kategori,
-        )
+        if menu_sama:
+            raise ValueError(
+                f"Menu '{nama_menu}' sudah tersedia."
+            )
 
         self._daftar_menu.append(menu)
 
-    def cari_menu(self, nama):
+    def cari_menu(self, nama_menu: str) -> Any:
         """
-        Mencari menu berdasarkan nama
+        Mencari menu berdasarkan nama.
+
+        Pencarian tidak membedakan huruf besar dan kecil.
+
+        Raises:
+            MenuTidakDitemukanError:
+                Jika menu tidak ditemukan.
         """
+        nama_dicari = str(nama_menu).strip().lower()
+
         for menu in self._daftar_menu:
-            if menu.nama.lower() == nama.lower():
+            if str(menu.nama).strip().lower() == nama_dicari:
                 return menu
 
         raise MenuTidakDitemukanError(
-            f"Menu '{nama}' tidak ditemukan!"
+            f"Menu '{nama_menu}' tidak ditemukan."
         )
 
-    def tampilkan_menu(self):
-        """
-        Menampilkan semua menu
-        """
+    def tampilkan_menu(self) -> None:
+        """Menampilkan seluruh menu yang tersedia."""
         print("\n===== DAFTAR MENU =====")
 
         if not self._daftar_menu:
             print("Belum ada menu.")
             return
 
-        for i, menu in enumerate(self._daftar_menu, start=1):
-            print(f"{i}. {menu}")
-
-    # PESANAN
-    def buka_meja(self, nomor):
-        """
-        Membuka meja baru
-        """
-
-        if nomor in self._pesanan_aktif:
-            raise MejaSudahTerisiError(
-                f"Meja {nomor} sedang digunakan!"
+        for nomor, menu in enumerate(
+            self._daftar_menu,
+            start=1,
+        ):
+            print(
+                f"{nomor}. {menu.nama} | "
+                f"Rp{menu.harga:,.0f} | "
+                f"Stok: {menu.stok}"
             )
 
-        pesanan_baru = Pesanan(nomor)
-        self._pesanan_aktif[nomor] = pesanan_baru
+    # =====================================================
+    # PENGELOLAAN MEJA
+    # =====================================================
 
-        print(f"Meja {nomor} berhasil dibuka.")
+    def buka_meja(self, nomor_meja: str) -> None:
+        """
+        Membuka meja dan membuat pesanan aktif baru.
+
+        Raises:
+            MejaSudahTerisiError:
+                Jika meja sudah mempunyai pesanan aktif.
+        """
+        nomor_meja = str(nomor_meja).strip()
+
+        if not nomor_meja:
+            raise ValueError(
+                "Nomor meja tidak boleh kosong."
+            )
+
+        if nomor_meja in self._pesanan_aktif:
+            raise MejaSudahTerisiError(
+                f"Meja {nomor_meja} sudah terisi."
+            )
+
+        self._pesanan_aktif[nomor_meja] = Pesanan(
+            nomor_meja
+        )
+
+        print(
+            f"Meja {nomor_meja} berhasil dibuka."
+        )
+
+    def tampilkan_pesanan_aktif(self) -> None:
+        """Menampilkan seluruh pesanan yang masih aktif."""
+        print("\n===== PESANAN AKTIF =====")
+
+        if not self._pesanan_aktif:
+            print("Tidak ada pesanan aktif.")
+            return
+
+        for nomor_meja, pesanan in (
+            self._pesanan_aktif.items()
+        ):
+            print(
+                f"\nMeja {nomor_meja}"
+            )
+            print(pesanan)
+
+    # =====================================================
+    # PEMESANAN
+    # =====================================================
 
     def pesan(
         self,
@@ -122,12 +156,29 @@ class Warung:
     ) -> None:
         """
         Menambahkan menu ke pesanan pada meja aktif.
+
+        Method ini mengurangi stok objek menu di memori.
+        Penyimpanan perubahan stok ke database dilakukan
+        oleh main.py.
+
+        Raises:
+            MejaTidakDitemukanError:
+                Jika meja belum dibuka.
+            MenuTidakDitemukanError:
+                Jika menu tidak ditemukan.
+            ValueError:
+                Jika jumlah pesanan tidak valid.
         """
-        nomor_meja = str(nomor_meja)
+        nomor_meja = str(nomor_meja).strip()
 
         if nomor_meja not in self._pesanan_aktif:
             raise MejaTidakDitemukanError(
                 f"Meja {nomor_meja} belum dibuka."
+            )
+
+        if not isinstance(jumlah, int):
+            raise TypeError(
+                "Jumlah pesanan harus berupa bilangan bulat."
             )
 
         if jumlah <= 0:
@@ -137,8 +188,7 @@ class Warung:
 
         menu = self.cari_menu(nama_menu)
 
-        # Mengurangi stok sekaligus memeriksa
-        # apakah stok mencukupi.
+        # Method kurangi_stok() melakukan validasi stok.
         menu.kurangi_stok(jumlah)
 
         pesanan = self._pesanan_aktif[nomor_meja]
@@ -153,50 +203,81 @@ class Warung:
             f"ditambahkan ke meja {nomor_meja}."
         )
 
-    def bayar(self, nomor_meja, uang):
+    # =====================================================
+    # PEMBAYARAN
+    # =====================================================
+
+    def bayar(
+        self,
+        nomor_meja: str,
+        uang_bayar: float,
+    ) -> float:
         """
-        Membayar pesanan
+        Memproses pembayaran pesanan.
+
+        Pesanan yang selesai dipindahkan dari
+        _pesanan_aktif ke _riwayat.
+
+        Returns:
+            Nilai kembalian pelanggan.
+
+        Raises:
+            MejaTidakDitemukanError:
+                Jika meja belum dibuka.
+            ValueError:
+                Jika uang pembayaran tidak mencukupi.
         """
+        nomor_meja = str(nomor_meja).strip()
 
         if nomor_meja not in self._pesanan_aktif:
-            print(f"Meja {nomor_meja} tidak ditemukan!")
-            return
+            raise MejaTidakDitemukanError(
+                f"Meja {nomor_meja} belum dibuka."
+            )
 
         pesanan = self._pesanan_aktif[nomor_meja]
-
         total = pesanan.hitung_total()
 
-        if uang < total:
-            print("Uang tidak cukup!")
-            return
+        if uang_bayar < total:
+            kekurangan = total - uang_bayar
 
-        kembalian = uang - total
+            raise ValueError(
+                f"Uang pembayaran kurang "
+                f"Rp{kekurangan:,.0f}."
+            )
 
-        # Pindahkan ke riwayat
+        kembalian = uang_bayar - total
+
+        # Simpan ke riwayat di dalam memori.
         self._riwayat.append(pesanan)
 
-        # Hapus dari pesanan aktif
+        # Meja kembali kosong setelah pembayaran.
         del self._pesanan_aktif[nomor_meja]
 
-        print("\n===== PEMBAYARAN =====")
-        print(f"Total      : Rp {total}")
-        print(f"Bayar      : Rp {uang}")
-        print(f"Kembalian  : Rp {kembalian}")
-        print("Pembayaran berhasil!")
+        print("\n===== PEMBAYARAN BERHASIL =====")
+        print(f"Meja       : {nomor_meja}")
+        print(f"Total      : Rp{total:,.0f}")
+        print(f"Uang bayar : Rp{uang_bayar:,.0f}")
+        print(f"Kembalian  : Rp{kembalian:,.0f}")
+
         return kembalian
 
-    # RIWAYAT
-    def tampilkan_riwayat(self):
-        """
-        Menampilkan semua riwayat pesanan
-        """
+    # =====================================================
+    # RIWAYAT TRANSAKSI
+    # =====================================================
 
-        print("\n===== RIWAYAT PESANAN =====")
+    def tampilkan_riwayat(self) -> None:
+        """Menampilkan riwayat transaksi yang selesai."""
+        print("\n===== RIWAYAT TRANSAKSI =====")
 
         if not self._riwayat:
-            print("Belum ada riwayat.")
+            print("Belum ada riwayat transaksi.")
             return
 
-        for i, pesanan in enumerate(self._riwayat, start=1):
-            print(f"\nRiwayat #{i}")
+        for nomor, pesanan in enumerate(
+            self._riwayat,
+            start=1,
+        ):
+            print(
+                f"\nTransaksi {nomor}"
+            )
             print(pesanan)
