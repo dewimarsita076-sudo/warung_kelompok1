@@ -1,4 +1,6 @@
 from services.warung import Warung
+from services import api_client
+from services import laporan
 from models.menu import (
     MenuMakanan,
     MenuMinuman
@@ -15,6 +17,8 @@ def menu_utama(warung: Warung):
         print("4. Pesan")
         print("5. Bayar")
         print("6. Riwayat")
+        print("7. Konversi Mata Uang")
+        print("8. Laporan")
         print("0. Keluar")
 
         try:
@@ -89,6 +93,110 @@ def menu_utama(warung: Warung):
             elif pilih == "6":
                 warung.tampilkan_riwayat()
 
+            elif pilih == "7":
+                kode = input(
+                    "Kode mata uang tujuan (mis. USD, JPY, EUR): "
+                )
+
+                try:
+                    kurs = api_client.get_kurs(kode)
+                    kode_tampil = kode.strip().upper()
+
+                    print(
+                        f"\n===== KONVERSI MATA UANG "
+                        f"({kode_tampil}) ====="
+                    )
+                    print(f"Kurs 1 IDR = {kurs:.6f} {kode_tampil}\n")
+
+                    if not warung._daftar_menu:
+                        print("Belum ada menu.")
+                    else:
+                        for menu in warung._daftar_menu:
+                            hasil = menu.harga * kurs
+                            print(
+                                f"{menu.nama:<15} : "
+                                f"Rp {menu.harga:,.0f}"
+                                f"  =  {hasil:,.2f} {kode_tampil}"
+                            )
+
+                except ValueError as error:
+                    print(f"Mata uang tidak valid: {error}")
+
+                except ConnectionError as error:
+                    print(f"Gagal mengambil kurs: {error}")
+
+            elif pilih == "8":
+                print("\n----- MENU LAPORAN -----")
+                print("1. Menu Tersedia (urut harga termurah)")
+                print("2. Pendapatan per Kategori")
+                print("3. Riwayat Diurutkan (total tertinggi)")
+                print("4. Ringkasan Transaksi")
+                sub = input("Pilih laporan: ")
+
+                if sub == "1":
+                    hasil = laporan.menu_tersedia(
+                        warung._daftar_menu
+                    )
+
+                    print("\n===== MENU TERSEDIA =====")
+
+                    if not hasil:
+                        print("Tidak ada menu dengan stok tersedia.")
+                    else:
+                        for menu in hasil:
+                            print(
+                                f"{menu.nama:<15} : "
+                                f"Rp {menu.harga:,.0f}  "
+                                f"(stok: {menu.stok})"
+                            )
+
+                elif sub == "2":
+                    hasil = laporan.pendapatan_per_kategori(
+                        warung._riwayat
+                    )
+
+                    print("\n===== PENDAPATAN PER KATEGORI =====")
+                    print(
+                        f"Makanan : Rp "
+                        f"{hasil['MenuMakanan']:,.0f}"
+                    )
+                    print(
+                        f"Minuman : Rp "
+                        f"{hasil['MenuMinuman']:,.0f}"
+                    )
+
+                elif sub == "3":
+                    hasil = laporan.riwayat_diurutkan_total(
+                        warung._riwayat
+                    )
+
+                    print(
+                        "\n===== RIWAYAT (Total Tertinggi -> "
+                        "Terendah) ====="
+                    )
+
+                    if not hasil:
+                        print("Belum ada riwayat.")
+                    else:
+                        for pesanan in hasil:
+                            print(pesanan)
+
+                elif sub == "4":
+                    hasil = laporan.ringkasan_transaksi(
+                        warung._riwayat
+                    )
+
+                    print("\n===== RINGKASAN TRANSAKSI =====")
+
+                    if not hasil:
+                        print("Belum ada transaksi.")
+                    else:
+                        for baris in hasil:
+                            print(baris)
+
+                else:
+                    print("Pilihan laporan tidak valid.")
+
             elif pilih == "0":
                 break
 
@@ -103,22 +211,26 @@ if __name__ == "__main__":
 
     warung = Warung()
 
-    warung.tambah_menu(
-        MenuMakanan(
-            "Nasi Rames",
-            15000,
-            20,
-            "Normal"
+    # Seed menu awal hanya jika database masih kosong,
+    # supaya tidak bentrok dengan constraint unique nama menu
+    # setiap kali program dijalankan ulang.
+    if not warung._daftar_menu:
+        warung.tambah_menu(
+            MenuMakanan(
+                "Nasi Rames",
+                15000,
+                20,
+                "Normal"
+            )
         )
-    )
 
-    warung.tambah_menu(
-        MenuMinuman(
-            "Es Teh",
-            5000,
-            30,
-            "Dingin"
+        warung.tambah_menu(
+            MenuMinuman(
+                "Es Teh",
+                5000,
+                30,
+                "Dingin"
+            )
         )
-    )
 
     menu_utama(warung)

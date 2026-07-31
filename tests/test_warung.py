@@ -1,9 +1,12 @@
 """Unit test untuk Sistem Manajemen Warung Makan."""
 
+import os
 import sys
 from pathlib import Path
+from typing import Generator
 
 import pytest
+from sqlalchemy import select
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
@@ -19,6 +22,10 @@ from models.meja import MejaKosong, MejaTerisi
 from models.menu import Menu, MenuMakanan, MenuMinuman
 from models.pesanan import ItemPesanan
 from services.warung import Warung
+from database.db_handler import SessionLocal
+from database.models import MenuDB, TransaksiDB
+from database import db_handler
+
 
 
 @pytest.fixture
@@ -34,12 +41,51 @@ def menu_minuman() -> MenuMinuman:
 
 
 @pytest.fixture
-def warung_dengan_menu() -> Warung:
+def warung_dengan_menu() -> Generator[Warung, None, None]:
     """Menyediakan objek warung yang sudah memiliki beberapa menu."""
+
+    # Pastikan tabel sudah ada dulu (penting kalau warung.db masih
+    # kosong / baru, misalnya setelah clone ulang repo), baru
+    # kemudian bersihkan sisa data dari run sebelumnya yang gagal,
+    # supaya insert di bawah ini tidak bentrok UNIQUE constraint.
+    db_handler.init_db()
+
+    with SessionLocal() as session:
+        # Hapus juga transaksi lama yang menempel ke menu ini,
+        # supaya tidak ikut kebaca sebagai riwayat pada test
+        # berikutnya (FK menu_id -> menu.id).
+        session.query(TransaksiDB).filter(
+            TransaksiDB.menu_id.in_(
+                select(MenuDB.id).where(
+                    MenuDB.nama.in_(["Nasi Rames", "Es Teh"])
+                )
+            )
+        ).delete(synchronize_session=False)
+        session.query(MenuDB).filter(
+            MenuDB.nama.in_(["Nasi Rames", "Es Teh"])
+        ).delete(synchronize_session=False)
+        session.commit()
+
     warung = Warung()
     warung.tambah_menu(MenuMakanan("Nasi Rames", 15000, 10, "Porsi normal"))
     warung.tambah_menu(MenuMinuman("Es Teh", 5000, 20, "Dingin"))
-    return warung
+
+    yield warung
+
+    # Bersihkan lagi setelah test selesai (baik lulus maupun gagal),
+    # supaya run berikutnya juga mulai dari kondisi bersih.
+    with SessionLocal() as session:
+        session.query(TransaksiDB).filter(
+            TransaksiDB.menu_id.in_(
+                select(MenuDB.id).where(
+                    MenuDB.nama.in_(["Nasi Rames", "Es Teh"])
+                )
+            )
+        ).delete(synchronize_session=False)
+        session.query(MenuDB).filter(
+            MenuDB.nama.in_(["Nasi Rames", "Es Teh"])
+        ).delete(synchronize_session=False)
+        session.commit()
 
 
 def test_harga_negatif_raise_error() -> None:
